@@ -1,0 +1,68 @@
+{
+ "s-idle": [
+  "nova",
+  "idle",
+  150,
+  202
+ ],
+ "s-walk": [
+  "nova",
+  "walk",
+  139,
+  228
+ ],
+ "s-jump": [
+  "nova",
+  "jump",
+  185,
+  294
+ ],
+ "s-spin": [
+  "nova",
+  "spin",
+  166,
+  224
+ ],
+ "s-standup": [
+  "nova",
+  "standup",
+  158,
+  263
+ ],
+ "s-wave": [
+  "nova",
+  "wave",
+  164,
+  200
+ ],
+ "a-idle": [
+  "avon",
+  "idle",
+  170,
+  240
+ ],
+ "a-jump": [
+  "avon",
+  "jump",
+  179,
+  291
+ ],
+ "a-walk": [
+  "avon",
+  "walk",
+  153,
+  210
+ ],
+ "a-wave": [
+  "avon",
+  "wave",
+  173,
+  227
+ ],
+ "a-spin": [
+  "avon",
+  "spin",
+  187,
+  205
+ ]
+}
