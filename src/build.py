@@ -8,6 +8,7 @@ Salidas:
     index.html      pantalla del evento (src/template.html)
     ganadores.html  deck de premiación (src/template-ganadores.html)
     admin.html      panel para capturar equipos (src/template-admin.html)
+    video.html      video de agradecimiento (src/template-video.html) → MP4 con src/video.mjs
 """
 import base64, hashlib, json, os
 
@@ -72,13 +73,12 @@ COMUNES = {
     '{{ADMIN_HASH}}': ADMIN_HASH,
 }
 
-def render(plantilla, salida, titulo):
+def render(plantilla, salida, titulo, corte='<div class="bg"></div>'):
     t = open(os.path.join(SRC, plantilla), encoding='utf-8').read()
     for k, v in COMUNES.items():
         t = t.replace(k, v)
     assert '{{' not in t, f'quedó un placeholder sin reemplazar en {plantilla}'
     # el <head> termina donde empieza el primer <div> del cuerpo
-    corte = '<div class="bg"></div>'
     full = ('<!doctype html>\n<html lang="es"><head><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
             + t.replace(corte, '</head><body>\n' + corte, 1)
@@ -89,4 +89,5 @@ def render(plantilla, salida, titulo):
 render('template.html', 'index.html', f'{len(PATROCINADORES)} patrocinadores')
 render('template-ganadores.html', 'ganadores.html', 'deck de premiación')
 render('template-admin.html', 'admin.html', 'panel de captura')
+render('template-video.html', 'video.html', 'video de agradecimiento', corte='<div id="frame">')
 print(f'   contraseña de /admin: {ADMIN_PASS!r} (cámbiala con ADMIN_PASS=... antes de publicar)')

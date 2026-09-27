@@ -1,0 +1,272 @@
+<title>INNOVATHON 2.0 · Gracias</title>
+<meta name="description" content="Video de agradecimiento a los patrocinadores del INNOVATHON 2.0, 1080x1350.">
+<style>
+/*
+ * Video de agradecimiento, 1080 × 1350 (4:5, el formato de feed de Instagram
+ * y LinkedIn). NO usa animaciones CSS: todo se dibuja con draw(t), así cada
+ * cuadro sale igual sin importar qué tan rápido capture el navegador.
+ *
+ *   node src/video.mjs        → renderiza video.html a MP4 (ver README)
+ *   abrir video.html          → se reproduce en tiempo real para revisar
+ */
+@font-face { font-family:'Blackbird'; src:url({{BLACKBIRD}}) format('opentype'); font-display:block; }
+@font-face { font-family:'JBM'; src:url({{JBM}}) format('woff2'); font-weight:100 800; font-display:block; }
+
+:root {
+  --neon:#7CFF00; --ink:#050505; --grid:#0B1008; --white:#FFFFFF;
+  --dim:#5f7a52; --line:#1c2b16; --code:#1b241b; --card:#0B1008;
+  --mono:'JBM','JetBrains Mono',ui-monospace,monospace;
+  --display:'Blackbird','JBM',monospace;
+}
+html, body { margin:0; background:#000; }
+body { display:grid; place-items:center; min-height:100vh; }
+
+#frame {
+  position:relative; width:1080px; height:1350px; overflow:hidden;
+  background:var(--ink); color:var(--white); font-family:var(--mono);
+  -webkit-font-smoothing:antialiased;
+}
+.grid {
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:54px 54px;
+}
+.crt {
+  position:absolute; inset:0; z-index:50; pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.2) 0 1px, transparent 1px 3px);
+}
+.checker { position:absolute; top:0; right:0; width:170px; height:170px; }
+.checker i { position:absolute; width:18px; height:18px; background:var(--neon); }
+
+.scene { position:absolute; inset:0; opacity:0; }
+.k { font-size:22px; letter-spacing:.2em; text-transform:uppercase; color:var(--dim); }
+.k b { color:var(--neon); }
+.display { font-family:var(--display); font-weight:400; text-transform:uppercase; line-height:.9; margin:0; }
+.chip { display:inline-block; background:var(--code); color:var(--neon); font-size:26px; padding:8px 18px; }
+
+/* 1 · intro */
+#s-intro { padding:0 80px; display:flex; flex-direction:column; justify-content:center; gap:34px; }
+#t-gracias { font-size:230px; color:var(--neon); }
+#t-posible { font-size:96px; }
+.fecha { font-size:22px; letter-spacing:.16em; color:var(--dim); text-transform:uppercase; line-height:1.7; }
+
+/* 2 · patrocinadores */
+#s-sponsors { padding:92px 64px 0; }
+.sp-head { display:flex; justify-content:space-between; align-items:baseline; }
+#sp-count { font-size:22px; letter-spacing:.2em; color:var(--dim); font-variant-numeric:tabular-nums; }
+.sp-title { font-size:84px; margin-top:22px; }
+.sp-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:14px; margin-top:44px; }
+.card {
+  position:relative; height:176px; border:1px solid var(--line); background:var(--card);
+  display:grid; grid-template-rows:1fr auto; align-items:center; justify-items:center; padding:18px 14px 14px;
+}
+.card img { max-width:80%; max-height:100px; filter:brightness(0) invert(1); }
+.card span { font-size:16px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); text-align:center; line-height:1.35; }
+.card.hot { border-color:var(--neon); }
+
+/* 3 · números */
+#s-stats { display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:26px; }
+.stat { font-size:150px; color:var(--neon); }
+.stat-l { font-size:30px; letter-spacing:.18em; text-transform:uppercase; }
+.bots { display:flex; align-items:flex-end; gap:40px; margin-top:30px; }
+
+/* 4 · cierre */
+#s-end { display:flex; flex-direction:column; align-items:center; text-align:center; background:#030303; }
+#s-end img {
+  width:1080px; height:1080px; object-fit:cover; margin-top:270px;
+  -webkit-mask-image:radial-gradient(ellipse 62% 62% at 50% 62%, #000 58%, transparent 100%);
+          mask-image:radial-gradient(ellipse 62% 62% at 50% 62%, #000 58%, transparent 100%);
+}
+.end-text { position:absolute; top:120px; left:0; right:0; display:flex; flex-direction:column; align-items:center; gap:24px; }
+#t-next { font-size:112px; }
+#t-next em { font-style:normal; color:var(--neon); }
+.end-foot { position:absolute; bottom:0; padding:120px 0 64px; background:linear-gradient(transparent, #030303 55%); left:0; right:0; text-align:center; font-size:24px; letter-spacing:.16em; color:var(--dim); text-transform:uppercase; }
+.end-foot b { color:var(--white); }
+
+/* sprites: el cuadro lo elige draw(t), no una animación */
+.sprite { background-repeat:no-repeat; flex:none; }
+{{SPRITE_CSS}}
+.walker { position:absolute; bottom:40px; left:0; z-index:20; }
+
+.confetti { position:absolute; inset:0; z-index:30; pointer-events:none; }
+.confetti i { position:absolute; width:14px; height:14px; background:var(--neon); }
+</style>
+
+<div id="frame">
+  <div class="grid"></div>
+  <div class="checker" id="checker"></div>
+
+  <section class="scene" id="s-intro">
+    <div class="k" id="intro-k"></div>
+    <div>
+      <h1 class="display" id="t-gracias">Gracias</h1>
+      <h2 class="display" id="t-posible">por hacerlo<br>posible</h2>
+    </div>
+    <div class="fecha" id="intro-f">INNOVATHON 2.0 · 26.09.2026<br>Parque Tecnológico Orión · Chihuahua</div>
+    <div class="sprite s-wave" id="i-nova" style="position:absolute;right:90px;bottom:80px"></div>
+  </section>
+
+  <section class="scene" id="s-sponsors">
+    <div class="sp-head"><div class="k"><b>&gt;</b> CON EL APOYO DE</div><div id="sp-count">00/12</div></div>
+    <h2 class="display sp-title">Nuestros aliados</h2>
+    <div class="sp-grid" id="sp-grid"></div>
+  </section>
+
+  <section class="scene" id="s-stats">
+    <div class="k"><b>&gt;</b> INNOVATHON 2.0</div>
+    <div><div class="display stat" id="st-1">12 horas</div><div class="stat-l">construyendo con IA</div></div>
+    <div><div class="display stat" id="st-2">12 aliados</div><div class="stat-l">que creyeron en esto</div></div>
+    <div class="bots"><div class="sprite s-jump" id="b-nova"></div><div class="sprite a-jump" id="b-avon"></div></div>
+  </section>
+
+  <section class="scene" id="s-end">
+    <img src="{{ROBOTS}}" alt="">
+    <div class="end-text">
+      <div class="k"><b>&gt;</b> git push origin main</div>
+      <h2 class="display" id="t-next">Nos vemos en<br>la <em>próxima</em></h2>
+    </div>
+    <div class="end-foot"><b>INNOVA</b> · innovathon2026.innovacuu.xyz</div>
+  </section>
+
+  <div class="walker" id="walk-a"><div class="sprite s-walk" id="w-nova"></div></div>
+  <div class="walker" id="walk-b"><div class="sprite a-walk" id="w-avon"></div></div>
+  <div class="confetti" id="confetti"></div>
+  <div class="crt"></div>
+</div>
+
+<script>
+const SPONSORS = {{SPONSORS}};
+const DUR = 24;             // segundos
+const $ = id => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const ease = x => 1 - Math.pow(1 - clamp(x), 3);
+const span = (t, a, b) => clamp((t - a) / (b - a));
+
+/* tablero pixelado de la esquina, como en la pantalla del evento */
+const CHECK = [[2,0,.19],[4,0,.45],[6,0,.41],[7,0,.39],[8,0,.54],[6,1,.52],[7,1,.16],[8,1,.48],[6,2,.54],[7,2,.34],[8,2,.12],[4,3,.37],[8,3,.48],[5,4,.5],[6,4,.52],[7,4,.29],[8,4,.13],[6,5,.35],[8,5,.28]];
+CHECK.forEach(([c, r]) => {
+  const i = document.createElement('i');
+  i.style.left = c * 18.8 + 'px'; i.style.top = r * 18.8 + 'px';
+  $('checker').appendChild(i);
+});
+
+SPONSORS.forEach(s => {
+  const d = document.createElement('div');
+  d.className = 'card';
+  d.innerHTML = `<img src="${s.src}" alt="${s.name}"><span>${s.name}</span>`;
+  $('sp-grid').appendChild(d);
+});
+const cards = [...$('sp-grid').children];
+
+/* confeti con semilla fija: cada render da exactamente el mismo */
+let seed = 7;
+const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const PARTS = Array.from({ length: 110 }, (_, i) => ({
+  x: rnd() * 1080, v: 380 + rnd() * 420, r: rnd() * 900 - 450, d: rnd() * .8,
+  white: i % 3 === 0,
+}));
+PARTS.forEach(p => {
+  const i = document.createElement('i');
+  if (p.white) i.style.background = '#fff';
+  p.el = i; $('confetti').appendChild(i);
+});
+
+/* medidas de cada sprite (salen de SPRITE_CSS) y cuadro según el tiempo */
+function sprite(el, t, h, fps = 11, fijo = null) {
+  const cs = getComputedStyle(el);
+  const fw = +cs.getPropertyValue('--fw'), fh = +cs.getPropertyValue('--fh');
+  const w = Math.round(h * fw / fh);
+  el.style.width = w + 'px'; el.style.height = h + 'px';
+  el.style.backgroundSize = `${w * 8}px ${h}px`;
+  const f = fijo ?? Math.floor(t * fps) % 8;
+  el.style.backgroundPosition = `${-f * w}px 0`;
+}
+
+function escena(id, t, a, b, fade = .35) {
+  const o = Math.min(span(t, a, a + fade), 1 - span(t, b - fade, b));
+  $(id).style.opacity = t < a || t > b ? 0 : o;
+  return t >= a && t <= b;
+}
+
+const KICK = '40 PRINT "GRACIAS" · INNOVATHON 2.0';
+
+function draw(t) {
+  /* 1 · intro 0 → 3.8 */
+  if (escena('s-intro', t, 0, 3.8, .3)) {
+    const n = Math.floor(span(t, .1, 1.1) * KICK.length);
+    const txt = KICK.slice(0, n);
+    $('intro-k').innerHTML = `<b>${txt.slice(0, 8)}</b>${txt.slice(8)}${n < KICK.length && Math.floor(t * 6) % 2 ? '▌' : ''}`;
+    const g = ease(span(t, .5, 1.3)), p = ease(span(t, 1.1, 1.9));
+    $('t-gracias').style.clipPath = `inset(-10% ${100 - g * 100}% -10% 0)`;
+    $('t-posible').style.transform = `translateY(${(1 - p) * 40}px)`;
+    $('t-posible').style.opacity = p;
+    $('intro-f').style.opacity = ease(span(t, 1.8, 2.4));
+    const nv = ease(span(t, 1.6, 2.3));
+    $('i-nova').style.opacity = nv;
+    $('i-nova').style.transform = `translateY(${(1 - nv) * 60}px)`;
+    sprite($('i-nova'), t, 300, 9);
+  }
+
+  /* 2 · patrocinadores 3.6 → 15.2 · uno cada 0.72 s */
+  if (escena('s-sponsors', t, 3.6, 15.2)) {
+    const t0 = 4.2, paso = .72;
+    let visibles = 0;
+    cards.forEach((c, i) => {
+      const a = span(t, t0 + i * paso, t0 + i * paso + .45);
+      if (a > 0) visibles = i + 1;
+      c.style.opacity = a > 0 ? 1 : 0;
+      c.style.clipPath = `inset(0 ${100 - ease(a) * 100}% 0 0)`;
+      c.classList.toggle('hot', t > t0 + i * paso && t < t0 + i * paso + .9);
+    });
+    $('sp-count').textContent = `${String(visibles).padStart(2, '0')}/${String(cards.length).padStart(2, '0')}`;
+  }
+
+  /* Nova y Avon cruzan abajo mientras aparecen los logos */
+  const cruza = (id, el, a, b, h) => {
+    const k = span(t, a, b);
+    $(id).style.display = k > 0 && k < 1 ? 'block' : 'none';
+    $(id).style.transform = `translateX(${-260 + k * 1400}px)`;
+    sprite($(el), t, h);
+  };
+  cruza('walk-a', 'w-nova', 4.4, 12.4, 190);
+  cruza('walk-b', 'w-avon', 8.2, 15.4, 190);
+
+  /* 3 · números + los dos brincando 15 → 20.2 */
+  if (escena('s-stats', t, 15, 20.2)) {
+    $('st-1').style.clipPath = `inset(-10% ${100 - ease(span(t, 15.3, 16)) * 100}% -10% 0)`;
+    $('st-2').style.clipPath = `inset(-10% ${100 - ease(span(t, 16.1, 16.8)) * 100}% -10% 0)`;
+    sprite($('b-nova'), t, 300, 10);
+    sprite($('b-avon'), t + .3, 300, 10);
+  }
+  const t0 = 16.9;
+  PARTS.forEach(p => {
+    const e = t - t0 - p.d;
+    if (e < 0 || t > 20.4) { p.el.style.display = 'none'; return; }
+    p.el.style.display = 'block';
+    p.el.style.transform = `translate(${p.x}px, ${-40 + e * p.v}px) rotate(${e * p.r}deg)`;
+    p.el.style.opacity = 1 - span(e, 2.2, 3.4);
+  });
+
+  /* 4 · cierre 20 → 24 */
+  if (escena('s-end', t, 20, DUR + 1, .5)) {
+    const k = ease(span(t, 20.4, 21.3));
+    $('t-next').style.clipPath = `inset(-10% ${100 - k * 100}% -10% 0)`;
+    $('s-end').querySelector('img').style.transform = `scale(${1.06 - .06 * ease(span(t, 20, 24))})`;
+  }
+}
+
+window.draw = draw;
+window.DUR = DUR;
+
+/* abierto a mano: se reproduce en loop. El render a MP4 pasa ?render y
+   llama draw(t) cuadro por cuadro. */
+if (!location.search.includes('render')) {
+  const inicio = performance.now();
+  const loop = () => { draw(((performance.now() - inicio) / 1000) % (DUR + 1)); requestAnimationFrame(loop); };
+  document.fonts.ready.then(() => requestAnimationFrame(loop));
+} else {
+  draw(0);
+}
+</script>
