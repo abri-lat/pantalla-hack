@@ -10,11 +10,16 @@ Es **un solo HTML autocontenido**: fuentes, logos, sprites e imágenes van incru
 ## Estructura
 
 ```
-index.html                 ← lo que se publica. NO se edita a mano: lo genera src/build.py
+index.html                 ← pantalla del evento. NO se edita a mano: lo genera src/build.py
+ganadores.html             ← deck de premiación. Tampoco se edita a mano.
+admin.html                 ← panel privado para capturar los equipos. Tampoco.
+vercel.json                ← rutas limpias: /primer, /segun, /tercer, /n8n, /clerk, /elevenlabs
 kickoff/                   ← logos y QR públicos que usan las slides del kickoff (Apps Script)
 src/
   template.html            ← el código real: CSS, HTML y JS, con placeholders {{...}}
-  build.py                 ← incrusta los assets en template.html y escribe index.html
+  template-ganadores.html  ← el deck de premiación
+  template-admin.html      ← el panel de captura
+  build.py                 ← incrusta los assets en las tres plantillas y escribe los tres HTML
   sprites.py               ← corta las hojas de sprites originales en tiras limpias
   assets/
     blackbird.otf          ← fuente display (Projekt Blackbird)
@@ -147,22 +152,91 @@ n8n · AWS User Group Chihuahua · ElevenLabs · Zavu · Clerk · CAFFENIO · Et
 | AWS UG Chihuahua | créditos | se entregan en el stand |
 | Clerk | plan gratuito | todos |
 
-**Premios:**
-- **Ganador #1:** n8n Cloud Pro + swag box de n8n por integrante.
-- **Ganadores #2 y #3:** swag box de n8n por integrante.
-- **Menciones especiales:**
-  - Best n8n Integration: swag box n8n.
-  - Best Clerk Integration: swag de Clerk + plan Pro.
-  - Best ElevenLabs Project: 3 meses Scale tier por miembro.
+**Premios** (los que salen en el deck de premiación):
+
+| | 3er lugar | 2do lugar | 1er lugar |
+|---|---|---|---|
+| Chihuahua Living Lab | 1 mes | 2 meses | 3 meses |
+| Talent Land 2027 | becas | becas | becas |
+| ElevenLabs | 3 meses Pro | 3 meses Pro | 3 meses Pro |
+| Clerk | swag box | swag box | swag box |
+| n8n | — | swag box | swag box |
+| Vuelos a Talent Land | — | — | $10K |
+
+**Menciones especiales** (un ganador cada una):
+- Mejor integración n8n: n8n Cloud Pro + swag oficial.
+- Mejor integración Clerk: plan Pro de Clerk + swag especial.
+- Mejor integración ElevenLabs: 3 meses de Scale, 1.8M créditos al mes por miembro.
 
 Los canjes viven en https://innovathon2026.innovacuu.xyz/perks.
 
-## Idea para la variación de ganadores
+## Premiación
 
-La pieza que más se acerca es la **celebración** (`.party` y la función `party()`): overlay negro a pantalla completa, Nova y Avon brincando, un título gigante en Blackbird y una línea abajo. Una pantalla de ganadores podría:
-- reusar ese overlay con un paso por premio, avanzando con una tecla para que quien presenta controle el ritmo: menciones especiales → #3 → #2 → #1
-- revelar el nombre con suspenso: `> Y EL GANADOR ES…`, pausa, nombre en neón
-- mostrar el logo del patrocinador de cada premio con el mismo filtro blanco de la tarjeta de patrocinadores
-- cerrar con los dos personajes cruzando juntos (`walk()` con `both`) y un "gracias" con la cinta de patrocinadores
+Tres páginas más, construidas por el mismo `build.py`, con la misma identidad y los mismos sprites.
 
-Conviene hacerla en su propia rama y, si crece, en su propio `template-ganadores.html` con una segunda salida en `build.py`, para no romper la pantalla del evento.
+| Ruta | Qué es |
+|---|---|
+| `/ganadores` | el deck completo, desde la portada |
+| `/n8n` `/clerk` `/elevenlabs` | el ganador de esa mejor integración, ya revelado |
+| `/tercer` `/segun` `/primer` | ese lugar general, ya revelado, con sus premios |
+| `/admin` | panel privado para escribir los equipos y controlar el deck (con contraseña) |
+
+Entrar por una ruta directa muestra el slide **completo**, sin pasos: sirve para proyectar un solo premio. Entrar por `/ganadores` arranca en la portada y avanza paso por paso.
+
+### Orden del deck
+
+1. **Portada** — "Estos son los ganadores"
+2. **Mejor integración n8n** — un ganador
+3. **Mejor integración Clerk** — un ganador
+4. **Mejor integración ElevenLabs** — un ganador
+5. **Tercer lugar general** + premios
+6. **Segundo lugar general** + premios
+7. **Primer lugar general** + premios (incluye los $10K de vuelos y el swag de n8n)
+8. **Cierre** — "Gracias por construir"
+
+Cada slide se revela por pasos con la flecha: primero el encabezado, luego el nombre del equipo, al final el premio. Cuando cae el nombre, hay confeti.
+
+### Controles
+
+| Tecla | Hace |
+|---|---|
+| `→` `espacio` `clic` | siguiente paso |
+| `←` `clic derecho` | paso anterior |
+| `↑` `↓` | slide completo, sin pasos |
+| `1`–`8` | saltar a ese slide |
+| `c` | confeti |
+| `a` | abrir `/admin` |
+| `f` | pantalla completa |
+
+### Cómo se sincroniza
+
+`/admin` y `/ganadores` hablan por **BroadcastChannel**, y los nombres viven en `localStorage`. No hay backend: todo pasa dentro del mismo navegador, así que funciona con el WiFi caído.
+
+Eso significa que **las dos pestañas tienen que estar en la misma laptop y el mismo navegador**. El flujo en el evento:
+
+1. Abrir `/admin` en la laptop.
+2. Apretar **Abrir /ganadores**, arrastrar esa ventana al proyector y ponerla en pantalla completa.
+3. Escribir los equipos en `/admin` conforme el jurado decide — se guarda con cada tecla y la pantalla se actualiza sola.
+4. Presentar desde las flechas del deck, o desde los botones de `/admin`.
+
+`/admin` también trae **Copiar respaldo (JSON)** y **Pegar respaldo**, por si hay que mover los nombres a otra laptop.
+
+### Contraseña de /admin
+
+La contraseña por defecto es `innovathon2026`. Para cambiarla:
+
+```bash
+ADMIN_PASS='la que quieras' python3 src/build.py
+```
+
+En el HTML solo queda el **SHA-256**, nunca el texto plano, así que la palabra no se ve en el código fuente. Una vez que entras, el navegador te recuerda hasta que aprietes **Cerrar sesión**.
+
+⚠️ **Esto no es seguridad real.** La página es estática: todo se descarga al navegador y quien sepa leer el código puede saltarse la puerta. Sirve para que nadie entre de curioso durante el evento, no para proteger nada valioso. Si algún día hace falta de verdad, va por Deployment Protection de Vercel o por un backend.
+
+El candado también funciona abierto con doble clic (`file://`), donde no existe `crypto.subtle`: hay un SHA-256 propio de respaldo.
+
+Las 6 claves que guarda son `primer`, `segun`, `tercer`, `n8n`, `clerk` y `elevenlabs`.
+
+### Premios
+
+Los textos viven en el arreglo `DECK` de `src/template-ganadores.html`, cada premio con el logo de su patrocinador (`LOGOS_GANADORES` en `build.py`). Para cambiar un premio se edita ahí y se corre `python3 src/build.py`.

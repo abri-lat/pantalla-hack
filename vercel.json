@@ -1,0 +1,12 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/primer", "destination": "/ganadores.html" },
+    { "source": "/segun", "destination": "/ganadores.html" },
+    { "source": "/tercer", "destination": "/ganadores.html" },
+    { "source": "/n8n", "destination": "/ganadores.html" },
+    { "source": "/clerk", "destination": "/ganadores.html" },
+    { "source": "/elevenlabs", "destination": "/ganadores.html" },
+    { "source": "/gracias", "destination": "/ganadores.html" }
+  ]
+}
