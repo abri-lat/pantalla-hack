@@ -52,7 +52,19 @@ body { display:grid; place-items:center; min-height:100vh; }
 #t-posible { font-size:96px; }
 .fecha { font-size:22px; letter-spacing:.16em; color:var(--dim); text-transform:uppercase; line-height:1.7; }
 
-/* 2 · patrocinadores */
+/* 2 · organizadores */
+#s-org { padding:120px 64px 0; display:flex; flex-direction:column; }
+.org-title { font-size:110px; margin-top:22px; }
+.org-list { display:grid; gap:22px; margin-top:56px; }
+.org {
+  border:1px solid var(--line); background:var(--card); height:300px;
+  display:grid; grid-template-rows:1fr auto; justify-items:center; align-items:center; padding:30px 24px 26px;
+}
+.org img { max-height:170px; max-width:80%; filter:brightness(0) invert(1); }
+.org span { font-size:20px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); }
+.org.hot { border-color:var(--neon); }
+
+/* 3 · patrocinadores */
 #s-sponsors { padding:92px 64px 0; }
 .sp-head { display:flex; justify-content:space-between; align-items:baseline; }
 #sp-count { font-size:22px; letter-spacing:.2em; color:var(--dim); font-variant-numeric:tabular-nums; }
@@ -105,7 +117,13 @@ body { display:grid; place-items:center; min-height:100vh; }
       <h2 class="display" id="t-posible">por hacerlo<br>posible</h2>
     </div>
     <div class="fecha" id="intro-f">INNOVATHON 2.0 · 26.09.2026<br>Parque Tecnológico Orión · Chihuahua</div>
-    <div class="sprite s-wave" id="i-nova" style="position:absolute;right:90px;bottom:80px"></div>
+    <div class="sprite s-spin" id="i-nova" style="position:absolute;right:90px;bottom:80px"></div>
+  </section>
+
+  <section class="scene" id="s-org">
+    <div class="k"><b>&gt;</b> ORGANIZADO POR</div>
+    <h2 class="display org-title">Organizadores</h2>
+    <div class="org-list" id="org-list"></div>
   </section>
 
   <section class="scene" id="s-sponsors">
@@ -138,7 +156,8 @@ body { display:grid; place-items:center; min-height:100vh; }
 
 <script>
 const SPONSORS = {{SPONSORS}};
-const DUR = 24;             // segundos
+const ORGANIZADORES = {{ORGANIZADORES}};
+const DUR = 27.5;           // segundos
 const $ = id => document.getElementById(id);
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const ease = x => 1 - Math.pow(1 - clamp(x), 3);
@@ -159,6 +178,13 @@ SPONSORS.forEach(s => {
   $('sp-grid').appendChild(d);
 });
 const cards = [...$('sp-grid').children];
+ORGANIZADORES.forEach(o => {
+  const d = document.createElement('div');
+  d.className = 'org';
+  d.innerHTML = `<img src="${o.src}" alt="${o.name}"><span>${o.desc}</span>`;
+  $('org-list').appendChild(d);
+});
+const orgs = [...$('org-list').children];
 
 /* confeti con semilla fija: cada render da exactamente el mismo */
 let seed = 7;
@@ -206,12 +232,22 @@ function draw(t) {
     const nv = ease(span(t, 1.6, 2.3));
     $('i-nova').style.opacity = nv;
     $('i-nova').style.transform = `translateY(${(1 - nv) * 60}px)`;
-    sprite($('i-nova'), t, 300, 9);
+    sprite($('i-nova'), t, 320, 7);
   }
 
-  /* 2 · patrocinadores 3.6 → 15.2 · uno cada 0.72 s */
-  if (escena('s-sponsors', t, 3.6, 15.2)) {
-    const t0 = 4.2, paso = .72;
+  /* 2 · organizadores 3.6 → 7.2 */
+  if (escena('s-org', t, 3.6, 7.2)) {
+    orgs.forEach((o, i) => {
+      const a = span(t, 4.1 + i * .7, 4.1 + i * .7 + .5);
+      o.style.opacity = a > 0 ? 1 : 0;
+      o.style.clipPath = `inset(0 ${100 - ease(a) * 100}% 0 0)`;
+      o.classList.toggle('hot', t > 4.1 + i * .7 && t < 4.1 + i * .7 + 1);
+    });
+  }
+
+  /* 3 · patrocinadores 7 → 18.6 · uno cada 0.72 s */
+  if (escena('s-sponsors', t, 7, 18.6)) {
+    const t0 = 7.6, paso = .72;
     let visibles = 0;
     cards.forEach((c, i) => {
       const a = span(t, t0 + i * paso, t0 + i * paso + .45);
@@ -230,30 +266,30 @@ function draw(t) {
     $(id).style.transform = `translateX(${-260 + k * 1400}px)`;
     sprite($(el), t, h);
   };
-  cruza('walk-a', 'w-nova', 4.4, 12.4, 190);
-  cruza('walk-b', 'w-avon', 8.2, 15.4, 190);
+  cruza('walk-a', 'w-nova', 7.8, 15.8, 190);
+  cruza('walk-b', 'w-avon', 11.6, 18.8, 190);
 
-  /* 3 · números + los dos brincando 15 → 20.2 */
-  if (escena('s-stats', t, 15, 20.2)) {
-    $('st-1').style.clipPath = `inset(-10% ${100 - ease(span(t, 15.3, 16)) * 100}% -10% 0)`;
-    $('st-2').style.clipPath = `inset(-10% ${100 - ease(span(t, 16.1, 16.8)) * 100}% -10% 0)`;
+  /* 4 · números + los dos brincando 18.4 → 23.6 */
+  if (escena('s-stats', t, 18.4, 23.6)) {
+    $('st-1').style.clipPath = `inset(-10% ${100 - ease(span(t, 18.7, 19.4)) * 100}% -10% 0)`;
+    $('st-2').style.clipPath = `inset(-10% ${100 - ease(span(t, 19.5, 20.2)) * 100}% -10% 0)`;
     sprite($('b-nova'), t, 300, 10);
     sprite($('b-avon'), t + .3, 300, 10);
   }
-  const t0 = 16.9;
+  const t0 = 20.3;
   PARTS.forEach(p => {
     const e = t - t0 - p.d;
-    if (e < 0 || t > 20.4) { p.el.style.display = 'none'; return; }
+    if (e < 0 || t > 23.8) { p.el.style.display = 'none'; return; }
     p.el.style.display = 'block';
     p.el.style.transform = `translate(${p.x}px, ${-40 + e * p.v}px) rotate(${e * p.r}deg)`;
     p.el.style.opacity = 1 - span(e, 2.2, 3.4);
   });
 
-  /* 4 · cierre 20 → 24 */
-  if (escena('s-end', t, 20, DUR + 1, .5)) {
-    const k = ease(span(t, 20.4, 21.3));
+  /* 5 · cierre 23.4 → fin */
+  if (escena('s-end', t, 23.4, DUR + 1, .5)) {
+    const k = ease(span(t, 23.8, 24.7));
     $('t-next').style.clipPath = `inset(-10% ${100 - k * 100}% -10% 0)`;
-    $('s-end').querySelector('img').style.transform = `scale(${1.06 - .06 * ease(span(t, 20, 24))})`;
+    $('s-end').querySelector('img').style.transform = `scale(${1.06 - .06 * ease(span(t, 23.4, DUR))})`;
   }
 }
 

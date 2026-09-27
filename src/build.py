@@ -59,6 +59,13 @@ SPONSORS = json.dumps(
     ensure_ascii=False,
 )
 LOGOS = json.dumps({n: logo(n) for n in LOGOS_GANADORES}, ensure_ascii=False)
+# quienes organizan: van en grande en el video, aparte de los patrocinadores
+ORGANIZADORES = json.dumps([
+    {'name': 'INNOVA', 'desc': 'Comunidad de tecnología, IA e innovación de Chihuahua',
+     'src': uri(os.path.join(A, 'organizadores', 'innova.png'), 'image/png')},
+    {'name': 'Chihuahua Tech Week', 'desc': 'Chihuahua Tech Week 2026',
+     'src': uri(os.path.join(A, 'organizadores', 'techweek.png'), 'image/png')},
+], ensure_ascii=False)
 
 COMUNES = {
     '{{BLACKBIRD}}': BLACKBIRD,
@@ -66,6 +73,7 @@ COMUNES = {
     '{{SPRITE_CSS}}': SPRITE_CSS,
     '{{SPONSORS}}': SPONSORS,
     '{{LOGOS}}': LOGOS,
+    '{{ORGANIZADORES}}': ORGANIZADORES,
     '{{ROBOTS}}': uri(os.path.join(A, 'robots.jpg'), 'image/jpeg'),
     '{{LOGO_N8N}}': logo('n8n'),
     '{{LOGO_CLERK}}': logo('clerk'),
