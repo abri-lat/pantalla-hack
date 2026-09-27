@@ -1,0 +1,382 @@
+<title>INNOVATHON 2.0 · Admin de ganadores</title>
+<meta name="description" content="Captura los equipos ganadores y controla el deck de premiación en vivo.">
+<meta name="robots" content="noindex">
+<style>
+@font-face { font-family:'Blackbird'; src:url({{BLACKBIRD}}) format('opentype'); font-display:block; }
+@font-face { font-family:'JBM'; src:url({{JBM}}) format('woff2'); font-weight:100 800; font-display:block; }
+
+:root {
+  color-scheme: dark;
+  --neon:#7CFF00; --ink:#050505; --grid:#0B1008; --white:#FFFFFF;
+  --dim:#5f7a52; --line:#1c2b16; --code:#1b241b; --card:#0b1008;
+  --mono:'JBM','JetBrains Mono',ui-monospace,Menlo,monospace;
+  --display:'Blackbird','JBM',ui-monospace,monospace;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0; min-height:100vh; background:var(--ink); color:var(--white);
+  font-family:var(--mono); -webkit-font-smoothing:antialiased;
+}
+.bg {
+  position:fixed; inset:0; pointer-events:none; z-index:0;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:48px 48px;
+}
+.wrap { position:relative; z-index:1; max-width:1100px; margin:0 auto; padding:40px 24px 80px; }
+
+header { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:16px; margin-bottom:8px; }
+.kicker { font-size:13px; letter-spacing:.16em; text-transform:uppercase; }
+.kicker b { color:var(--neon); }
+.kicker span { color:var(--dim); }
+h1 { font-family:var(--display); font-weight:400; color:var(--neon); font-size:56px; line-height:.95; text-transform:uppercase; margin:12px 0 6px; }
+.sub { color:var(--dim); font-size:14px; letter-spacing:.06em; margin:0 0 32px; line-height:1.6; }
+.sub code { background:var(--code); color:var(--neon); padding:.1em .45em; }
+
+.card { border:1px solid var(--line); background:var(--card); padding:22px 24px 26px; margin-bottom:20px; }
+.card > h2 {
+  margin:0 0 4px; font-size:13px; letter-spacing:.2em; text-transform:uppercase; color:var(--dim); font-weight:500;
+  display:flex; align-items:center; gap:10px;
+}
+.card > h2 b { color:var(--neon); }
+.card > h2 img { height:20px; filter:brightness(0) invert(1); }
+.card > p { margin:0 0 18px; color:var(--dim); font-size:12px; letter-spacing:.06em; }
+
+.field { display:grid; gap:6px; margin-top:14px; }
+.field label { font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--dim); }
+.field label b { color:var(--neon); }
+.field input {
+  font-family:var(--mono); font-size:20px; font-weight:700; color:var(--white);
+  background:#0a0f07; border:1px solid var(--line); padding:12px 14px; width:100%;
+  text-transform:uppercase; letter-spacing:.02em; outline:none; transition:border-color .2s;
+}
+.field input::placeholder { color:#243019; font-weight:400; letter-spacing:.14em; }
+.field input:focus { border-color:var(--neon); }
+.field.first input { font-size:24px; color:var(--neon); }
+
+.row3 { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+
+.bar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:8px; }
+button {
+  font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase;
+  background:transparent; color:var(--white); border:1px solid var(--line);
+  padding:11px 16px; cursor:pointer; transition:border-color .2s, color .2s;
+}
+button:hover { border-color:var(--neon); color:var(--neon); }
+button.primary { border-color:var(--neon); color:var(--neon); }
+button.primary:hover { background:var(--neon); color:var(--ink); }
+button.ghost { color:var(--dim); }
+
+.state { font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); margin-left:auto; }
+.state b { color:var(--neon); }
+.state.warn b { color:#ffb020; }
+
+.jump { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+.jump button { padding:9px 12px; font-size:11px; }
+.jump button.on { border-color:var(--neon); color:var(--neon); }
+
+.sticky {
+  position:sticky; bottom:0; z-index:2; margin:0 -24px -80px; padding:16px 24px 20px;
+  background:linear-gradient(transparent, var(--ink) 22%); backdrop-filter:blur(2px);
+}
+
+/* ─── puerta de acceso ───
+   Tope para que nadie entre de curioso, NO seguridad real: la página es
+   estática y el candado vive en el navegador. Ver README. */
+.gate {
+  position:fixed; inset:0; z-index:10; background:var(--ink);
+  display:grid; place-items:center; padding:24px;
+}
+.gate.off { display:none; }
+.gate form { display:grid; gap:14px; width:100%; max-width:380px; }
+.gate h2 {
+  margin:0; font-family:var(--display); font-weight:400; color:var(--neon);
+  font-size:44px; line-height:.95; text-transform:uppercase;
+}
+.gate p { margin:0 0 6px; color:var(--dim); font-size:12px; letter-spacing:.06em; line-height:1.6; }
+.gate input {
+  font-family:var(--mono); font-size:18px; color:var(--white); background:#0a0f07;
+  border:1px solid var(--line); padding:13px 14px; width:100%; outline:none; letter-spacing:.2em;
+}
+.gate input:focus { border-color:var(--neon); }
+.gate .bad { color:#ffb020; font-size:11px; letter-spacing:.16em; text-transform:uppercase; min-height:1.2em; }
+.gate.shake form { animation:shake .3s; }
+@keyframes shake { 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+.locked { display:none; }
+
+@media (max-width: 720px) {
+  .row3 { grid-template-columns:1fr; }
+  h1 { font-size:38px; }
+  .state { margin-left:0; width:100%; }
+}
+</style>
+
+<div class="bg"></div>
+
+<div class="gate" id="gate">
+  <form id="gate-form" autocomplete="off">
+    <h2>Panel privado</h2>
+    <p>Escribe la contraseña para capturar a los ganadores.</p>
+    <input type="password" id="gate-pass" placeholder="CONTRASEÑA" autofocus>
+    <div class="bad" id="gate-bad"></div>
+    <button class="primary" type="submit">Entrar</button>
+  </form>
+</div>
+
+<div class="wrap locked" id="panel">
+  <header>
+    <div class="kicker"><b>40 PRINT</b> <span>"INNOVATHON 2.0" &middot; PANEL PRIVADO</span></div>
+    <div class="kicker"><span id="clock" style="color:var(--white)">--:--</span></div>
+  </header>
+
+  <h1>Admin de ganadores</h1>
+  <p class="sub">
+    Escribe los equipos y la pantalla de premiación se actualiza al instante.<br>
+    Abre <code>/ganadores</code> en otra ventana (o arrástrala al proyector) y déjala ahí: esta página la controla.<br>
+    Todo vive en este navegador, así que funciona aunque se caiga el WiFi.
+  </p>
+
+  <div class="card">
+    <h2><b>&gt;</b> Control de la pantalla</h2>
+    <p>La ventana del deck responde a estos botones igual que a las flechas.</p>
+    <div class="bar">
+      <button class="primary" id="open">Abrir /ganadores</button>
+      <button id="prev">&larr; Atrás</button>
+      <button id="next">Siguiente &rarr;</button>
+      <button id="party">Confeti</button>
+      <span class="state" id="state">Pantalla: <b id="link">sin conectar</b></span>
+    </div>
+    <div class="jump" id="jump"></div>
+  </div>
+
+  <div class="card">
+    <h2><b>&gt;</b> Lugares generales</h2>
+    <p>Estos salen en los últimos tres slides, con todos los premios.</p>
+    <div class="row3">
+      <div class="field first"><label><b>1</b> Primer lugar</label><input data-name="primer" placeholder="Equipo" autocomplete="off"></div>
+      <div class="field"><label><b>2</b> Segundo lugar</label><input data-name="segun" placeholder="Equipo" autocomplete="off"></div>
+      <div class="field"><label><b>3</b> Tercer lugar</label><input data-name="tercer" placeholder="Equipo" autocomplete="off"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><img src="{{LOGO_N8N}}" alt=""> <span style="color:var(--dim)">Mejor integración n8n</span></h2>
+    <p>Un solo ganador. Se revela a la mitad del slide, antes del premio.</p>
+    <div class="field first"><label><b>&gt;</b> Equipo ganador</label><input data-name="n8n" placeholder="Equipo" autocomplete="off"></div>
+  </div>
+
+  <div class="card">
+    <h2><img src="{{LOGO_CLERK}}" alt=""> <span style="color:var(--dim)">Mejor integración Clerk</span></h2>
+    <p>Un solo ganador. Se revela a la mitad del slide, antes del premio.</p>
+    <div class="field first"><label><b>&gt;</b> Equipo ganador</label><input data-name="clerk" placeholder="Equipo" autocomplete="off"></div>
+  </div>
+
+  <div class="card">
+    <h2><img src="{{LOGO_ELEVENLABS}}" alt=""> <span style="color:var(--dim)">Mejor integración ElevenLabs</span></h2>
+    <p>Un solo ganador. Se revela a la mitad del slide, antes del premio.</p>
+    <div class="field first"><label><b>&gt;</b> Equipo ganador</label><input data-name="elevenlabs" placeholder="Equipo" autocomplete="off"></div>
+  </div>
+
+  <div class="sticky">
+    <div class="bar">
+      <button id="copy" class="ghost">Copiar respaldo (JSON)</button>
+      <button id="paste" class="ghost">Pegar respaldo</button>
+      <button id="clear" class="ghost">Borrar todo</button>
+      <button id="lock" class="ghost">Cerrar sesión</button>
+      <span class="state" id="saved">Guardado <b>—</b></span>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ CONFIG ============ */
+const CHANNEL = 'innovathon-ganadores';
+const STORE = 'innovathon.ganadores.v1';
+/* Mismo orden que el DECK de /ganadores. */
+const SLIDES = ['intro', 'n8n', 'clerk', 'elevenlabs', 'tercer', 'segun', 'primer', 'gracias'];
+/* ================================ */
+
+const $ = id => document.getElementById(id);
+
+/* ─── puerta de acceso ───
+   Guardamos el SHA-256 de la contraseña, no la contraseña: así no queda a la
+   vista en el código. Aun así es un tope, no un muro; la página es estática. */
+const PASS_HASH = '{{ADMIN_HASH}}';
+const UNLOCK = 'innovathon.admin.unlocked';
+
+/* crypto.subtle no existe en file://, y el plan B del evento es abrir el HTML
+   con doble clic desde la laptop. Por eso va un SHA-256 propio de respaldo. */
+function sha256Puro(msg) {
+  const K = [];
+  const frac = x => Math.floor((x - Math.floor(x)) * 4294967296);
+  for (let n = 2, i = 0; i < 64; n++) {
+    let primo = true;
+    for (let d = 2; d * d <= n; d++) if (n % d === 0) { primo = false; break; }
+    if (primo) K[i++] = frac(Math.cbrt(n));
+  }
+  let H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+  const bytes = [...new TextEncoder().encode(msg)];
+  const bits = bytes.length * 8;
+  bytes.push(0x80);
+  while (bytes.length % 64 !== 56) bytes.push(0);
+  for (let i = 7; i >= 0; i--) bytes.push(Math.floor(bits / 2 ** (i * 8)) & 0xff);
+
+  const rotr = (x, n) => (x >>> n) | (x << (32 - n));
+  for (let b = 0; b < bytes.length; b += 64) {
+    const w = new Array(64);
+    for (let i = 0; i < 16; i++) {
+      w[i] = (bytes[b + i * 4] << 24) | (bytes[b + i * 4 + 1] << 16) | (bytes[b + i * 4 + 2] << 8) | bytes[b + i * 4 + 3];
+    }
+    for (let i = 16; i < 64; i++) {
+      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+    }
+    let [a, bb, c, d, e, f, g, h] = H;
+    for (let i = 0; i < 64; i++) {
+      const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+      const ch = (e & f) ^ (~e & g);
+      const t1 = (h + S1 + ch + K[i] + w[i]) | 0;
+      const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+      const maj = (a & bb) ^ (a & c) ^ (bb & c);
+      const t2 = (S0 + maj) | 0;
+      h = g; g = f; f = e; e = (d + t1) | 0;
+      d = c; c = bb; bb = a; a = (t1 + t2) | 0;
+    }
+    H = H.map((v, i) => (v + [a, bb, c, d, e, f, g, h][i]) | 0);
+  }
+  return H.map(v => (v >>> 0).toString(16).padStart(8, '0')).join('');
+}
+
+async function sha256(s) {
+  if (crypto?.subtle) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
+    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  return sha256Puro(s);
+}
+function unlock() {
+  $('gate').classList.add('off');
+  $('panel').classList.remove('locked');
+  document.querySelector('input[data-name]')?.focus();
+}
+try { if (localStorage.getItem(UNLOCK) === PASS_HASH) unlock(); } catch (e) {}
+
+$('gate-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const h = await sha256($('gate-pass').value);
+  if (h === PASS_HASH) {
+    try { localStorage.setItem(UNLOCK, PASS_HASH); } catch (e) {}
+    $('gate-bad').textContent = '';
+    unlock();
+  } else {
+    $('gate-bad').textContent = 'Contraseña incorrecta';
+    $('gate-pass').value = '';
+    $('gate').classList.add('shake');
+    setTimeout(() => $('gate').classList.remove('shake'), 320);
+  }
+});
+const pad = n => String(n).padStart(2, '0');
+const inputs = [...document.querySelectorAll('input[data-name]')];
+const bc = 'BroadcastChannel' in window ? new BroadcastChannel(CHANNEL) : null;
+
+let screenWin = null, curSlide = 0;
+
+/* ── cargar lo guardado ── */
+let NAMES = {};
+try { NAMES = JSON.parse(localStorage.getItem(STORE)) || {}; } catch (e) { NAMES = {}; }
+inputs.forEach(i => { i.value = NAMES[i.dataset.name] || ''; });
+
+function collect() {
+  const out = {};
+  inputs.forEach(i => { const v = i.value.trim(); if (v) out[i.dataset.name] = v; });
+  return out;
+}
+
+function save() {
+  NAMES = collect();
+  try { localStorage.setItem(STORE, JSON.stringify(NAMES)); } catch (e) {}
+  bc?.postMessage({ type:'names', from:'admin', names:NAMES });
+  const d = new Date();
+  $('saved').innerHTML = `Guardado <b>${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}</b>`;
+}
+
+/* se guarda con cada tecla: no hay botón de guardar que se te olvide apretar */
+inputs.forEach(i => i.addEventListener('input', save));
+
+/* ── control remoto del deck ── */
+function cmd(c) { bc?.postMessage({ type:'cmd', from:'admin', cmd:c }); }
+$('next').addEventListener('click', () => cmd('next'));
+$('prev').addEventListener('click', () => cmd('prev'));
+$('party').addEventListener('click', () => cmd('confetti'));
+
+$('open').addEventListener('click', () => {
+  /* relativo al .html: sirve en Vercel (cleanUrls redirige), en un server local y en file:// */
+  screenWin = window.open('ganadores.html', 'innovathon-deck');
+  /* la ventana nueva lee localStorage al arrancar, pero reenviamos por si acaso */
+  setTimeout(save, 800);
+});
+
+/* saltos directos a cada slide */
+SLIDES.forEach((id, i) => {
+  const b = document.createElement('button');
+  b.textContent = `${pad(i + 1)} ${id}`;
+  b.addEventListener('click', () => bc?.postMessage({ type:'nav', from:'admin', slide:i, step:0 }));
+  $('jump').appendChild(b);
+});
+
+/* el deck avisa en qué slide va */
+bc?.addEventListener('message', e => {
+  const m = e.data;
+  if (!m || m.from !== 'deck') return;
+  if (m.type === 'nav') {
+    curSlide = m.slide;
+    [...$('jump').children].forEach((b, i) => b.classList.toggle('on', i === curSlide));
+    $('link').textContent = `conectada · ${SLIDES[curSlide]} paso ${m.step + 1}`;
+    $('state').classList.remove('warn');
+  }
+});
+
+/* si en 3 s el deck no contestó, avisamos que no hay ventana escuchando */
+function ping() {
+  bc?.postMessage({ type:'cmd', from:'admin', cmd:'ping' });
+  setTimeout(() => {
+    if ($('link').textContent === 'sin conectar') $('state').classList.add('warn');
+  }, 3000);
+}
+if (!bc) { $('link').textContent = 'navegador sin BroadcastChannel'; $('state').classList.add('warn'); }
+else ping();
+
+/* ── respaldo manual, por si hay que pasar los nombres a otra laptop ── */
+$('copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(JSON.stringify(collect(), null, 2)); $('copy').textContent = 'Copiado'; }
+  catch (e) { $('copy').textContent = 'No se pudo copiar'; }
+  setTimeout(() => { $('copy').textContent = 'Copiar respaldo (JSON)'; }, 1600);
+});
+$('paste').addEventListener('click', () => {
+  const raw = prompt('Pega el JSON de respaldo:');
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    inputs.forEach(i => { i.value = data[i.dataset.name] || ''; });
+    save();
+  } catch (e) { alert('Ese JSON no se pudo leer.'); }
+});
+$('clear').addEventListener('click', () => {
+  if (!confirm('¿Borrar los 6 nombres? La pantalla se queda en blanco.')) return;
+  inputs.forEach(i => { i.value = ''; });
+  save();
+});
+
+$('lock').addEventListener('click', () => {
+  try { localStorage.removeItem(UNLOCK); } catch (e) {}
+  location.reload();
+});
+
+function clock() {
+  const d = new Date();
+  $('clock').textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+clock(); setInterval(clock, 10000);
+</script>
